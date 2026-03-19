@@ -3,139 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2人対戦エアホッケー</title>
+<title>エアホッケー（対戦・ラリー加速）</title>
 <meta name="robots" content="index,follow">
 <style>
   body { margin:0; font-family:sans-serif; background:#0b2c4a; color:#fff; text-align:center; }
-  h1 { margin:10px; }
-
-  #game {
-    width:420px; height:600px; margin:20px auto;
-    background:#1e90ff; border:6px solid #fff; border-radius:12px;
-    position:relative; overflow:hidden;
-  }
-
-  #centerLine {
-    position:absolute; top:50%; left:0; width:100%; height:2px; background:#fff;
-  }
-
-  #puck {
-    width:20px; height:20px; background:#fff; border-radius:50%;
-    position:absolute; top:290px; left:200px;
-  }
-
-  .paddle {
-    width:80px; height:15px; position:absolute; border-radius:8px;
-  }
-  #p1 { bottom:20px; left:170px; background:#ff4d4d; }
-  #p2 { top:20px; left:170px; background:#ffd700; }
-
-  .goal {
-    width:140px; height:10px; left:140px; position:absolute; background:#fff;
-  }
+  #game { width:420px; height:600px; margin:20px auto; background:#1e90ff; border:6px solid #fff; border-radius:12px; position:relative; overflow:hidden; }
+  #centerLine { position:absolute; top:50%; width:100%; height:2px; background:#fff; }
+  #puck { width:20px; height:20px; background:#fff; border-radius:50%; position:absolute; top:290px; left:200px; }
+  .paddle { width:80px; height:15px; position:absolute; border-radius:8px; }
+  #p1 { bottom:20px; left:170px; background:red; }
+  #p2 { top:20px; left:170px; background:yellow; }
+  .goal { width:140px; height:10px; left:140px; position:absolute; background:#fff; }
   #goalTop { top:0; }
   #goalBottom { bottom:0; }
-
-  #score { font-size:20px; margin-top:10px; }
-
-  button { padding:10px 20px; font-size:16px; margin:10px; cursor:pointer; }
+  button { margin:10px; padding:10px; }
 </style>
 </head>
 <body>
-
-<h1>エアホッケー（2人対戦）</h1>
-<p>下：← →　上：A D</p>
-
+<h1>エアホッケー（ラリー加速・勝敗あり）</h1>
+<p>下:←→ 上:A D</p>
 <div id="game">
-  <div id="centerLine"></div>
-  <div id="goalTop" class="goal"></div>
-  <div id="goalBottom" class="goal"></div>
-  <div id="puck"></div>
-  <div id="p1" class="paddle"></div>
-  <div id="p2" class="paddle"></div>
+<div id="centerLine"></div>
+<div id="goalTop" class="goal"></div>
+<div id="goalBottom" class="goal"></div>
+<div id="puck"></div>
+<div id="p1" class="paddle"></div>
+<div id="p2" class="paddle"></div>
 </div>
-
 <div id="score">0 - 0</div>
+<div id="status"></div>
 <button onclick="startGame()">スタート</button>
-
+<button onclick="resetGame()">リセット</button>
 <script>
-let puck = document.getElementById("puck");
-let p1 = document.getElementById("p1");
-let p2 = document.getElementById("p2");
-let scoreEl = document.getElementById("score");
+let puck=document.getElementById("puck");
+let p1=document.getElementById("p1");
+let p2=document.getElementById("p2");
+let scoreEl=document.getElementById("score");
+let statusEl=document.getElementById("status");
 
-let p1x=170, p2x=170;
-let x=200, y=290;
-let vx=3, vy=3;
+let p1x=170,p2x=170;
+let x=200,y=290,vx=3,vy=3;
 let playing=false;
-let score1=0, score2=0;
+let score1=0,score2=0;
+let rally=0;
+let paddleSpeed=20;
 
-window.addEventListener("keydown", e=>{
-  if(e.key==="ArrowLeft") p1x-=20;
-  if(e.key==="ArrowRight") p1x+=20;
-  if(e.key==="a") p2x-=20;
-  if(e.key==="d") p2x+=20;
-
-  p1x=Math.max(0,Math.min(340,p1x));
-  p2x=Math.max(0,Math.min(340,p2x));
-
-  p1.style.left=p1x+"px";
-  p2.style.left=p2x+"px";
+window.addEventListener("keydown",e=>{
+ if(e.key==="ArrowLeft") p1x-=paddleSpeed;
+ if(e.key==="ArrowRight") p1x+=paddleSpeed;
+ if(e.key==="a") p2x-=paddleSpeed;
+ if(e.key==="d") p2x+=paddleSpeed;
+ p1x=Math.max(0,Math.min(340,p1x));
+ p2x=Math.max(0,Math.min(340,p2x));
+ p1.style.left=p1x+"px";
+ p2.style.left=p2x+"px";
 });
 
 function resetPuck(){
-  x=200; y=290;
-  vx = (Math.random()>0.5?3:-3);
-  vy = (Math.random()>0.5?3:-3);
+ x=200;y=290;
+ vx=(Math.random()>0.5?3:-3);
+ vy=(Math.random()>0.5?3:-3);
+ rally=0;
+ paddleSpeed=20;
 }
 
-function updateScore(){
-  scoreEl.textContent = score1 + " - " + score2;
+function updateScore(){ scoreEl.textContent=score1+" - "+score2; }
+
+function checkWinner(){
+ if(score1>=5){ statusEl.textContent="プレイヤー1の勝ち！"; playing=false; }
+ if(score2>=5){ statusEl.textContent="プレイヤー2の勝ち！"; playing=false; }
+}
+
+function resetGame(){
+ score1=0;score2=0;
+ updateScore();
+ statusEl.textContent="";
+ p1x=170;p2x=170;
+ p1.style.left=p1x+"px";
+ p2.style.left=p2x+"px";
+ resetPuck();
+ playing=false;
 }
 
 function startGame(){
-  if(playing) return;
-  playing=true;
-  resetPuck();
+ if(playing) return;
+ playing=true;
+ resetPuck();
+ function loop(){
+  if(!playing) return;
 
-  function loop(){
-    if(!playing) return;
+  x+=vx; y+=vy;
 
-    x+=vx;
-    y+=vy;
+  if(x<=0||x>=400) vx*=-1;
 
-    // 壁反射
-    if(x<=0 || x>=400) vx*=-1;
-
-    // パドル反射
-    if(y>=560 && x>p1x && x<p1x+80){ vy*=-1; }
-    if(y<=40 && x>p2x && x<p2x+80){ vy*=-1; }
-
-    // ゴール（上）
-    if(y<=0){
-      if(x>140 && x<280){ score1++; }
-      else{ score2++; }
-      updateScore();
-      resetPuck();
-    }
-
-    // ゴール（下）
-    if(y>=580){
-      if(x>140 && x<280){ score2++; }
-      else{ score1++; }
-      updateScore();
-      resetPuck();
-    }
-
-    puck.style.left=x+"px";
-    puck.style.top=y+"px";
-
-    requestAnimationFrame(loop);
+  if(y>=560 && x>p1x && x<p1x+80){
+    vy*=-1;
+    rally++;
+  }
+  if(y<=40 && x>p2x && x<p2x+80){
+    vy*=-1;
+    rally++;
   }
 
-  loop();
+  // ラリーで加速
+  let speed=1 + rally*0.05;
+  x+=vx*(speed-1);
+  y+=vy*(speed-1);
+  paddleSpeed = 20 + rally*0.3;
+
+  if(y<=0){
+    if(x>140&&x<280){ score1++; statusEl.textContent="プレイヤー1得点！"; }
+    else{ score2++; statusEl.textContent="プレイヤー2得点！"; }
+    updateScore(); checkWinner(); resetPuck();
+  }
+
+  if(y>=580){
+    if(x>140&&x<280){ score2++; statusEl.textContent="プレイヤー2得点！"; }
+    else{ score1++; statusEl.textContent="プレイヤー1得点！"; }
+    updateScore(); checkWinner(); resetPuck();
+  }
+
+  puck.style.left=x+"px";
+  puck.style.top=y+"px";
+
+  requestAnimationFrame(loop);
+ }
+ loop();
 }
 </script>
-
 </body>
 </html>
